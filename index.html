@@ -3,11 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🦌 Moose – Générateur d'URL Grist</title>
+  <title>🦌 Moose – Générateur d'URL Grist/DN</title>
 
   <!-- DSFR -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.11.2/dist/dsfr.min.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.11.2/dist/utility/icons/icons.min.css" />
 
   <!-- Grist Plugin API -->
   <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
@@ -204,6 +202,8 @@
       margin-bottom: 1rem;
     }
     .alert--info { background: #e8edff; color: #000091; border-left: 3px solid #000091; }
+    .alert a { text-decoration: none !important; color: #000091; font-weight: 600; }
+    .alert a:hover { text-decoration: none !important; opacity: 0.8; }
     .alert--error { background: #ffe9e9; color: #ce0500; border-left: 3px solid #ce0500; }
     .alert--success { background: #dffee7; color: #18753c; border-left: 3px solid #18753c; }
 
@@ -307,7 +307,7 @@
         <path fill="#000091" d="m 92.723186,60.206519 c -0.0895,-0.85628 -0.35314,-2.11772 -0.58587,-2.80321 -0.23273,-0.68548 -0.38371,-1.28577 -0.33551,-1.33397 0.0482,-0.0482 0.80089,0.15664 1.67266,0.4552 2.3434,0.80256 6.29071,0.79991 7.593244,-0.005 2.26575,-1.40031 2.35585,-4.60329 0.17328,-6.15994 -0.87771,-0.626 -0.98579,-0.63576 -7.933004,-0.71633 -6.227857,-0.0722 -7.093091,-0.0318 -7.474478,0.34963 -0.371861,0.37186 -0.431316,1.21284 -0.431316,6.10096 v 5.66964 h 3.741859 3.741855 z m -3.883228,-7.30885 c -0.177082,-0.21337 -0.252852,-0.56806 -0.168378,-0.78819 0.202301,-0.52719 1.128072,-0.5145 1.332513,0.0183 0.223297,0.5819 0.22053,0.58913 -0.340785,0.88953 -0.371633,0.19889 -0.584704,0.16794 -0.82335,-0.11961 z m 0.720763,-4.15177 c 0.468181,-0.13584 1.152795,-0.60536 1.521355,-1.04338 0.56885,-0.67603 0.67012,-1.06007 0.67012,-2.54119 0,-1.25226 -0.12361,-1.88139 -0.43789,-2.22866 -0.896,-0.99007 -2.737114,-0.30102 -2.737114,1.02439 0,0.77433 -1.102322,1.93134 -1.840056,1.93134 -0.973035,0 -1.599527,-0.92515 -1.599527,-2.36205 0,-1.09328 -0.112523,-1.39222 -0.69714,-1.85208 -0.856636,-0.67383 -1.192598,-0.68466 -1.960115,-0.0632 -0.45817,0.371 -0.628638,0.84007 -0.724232,1.99281 -0.130125,1.56914 -0.663849,2.28448 -1.704468,2.28448 -1.022508,0 -1.528629,-0.94413 -1.528629,-2.85155 0,-2.22297 -0.432262,-2.96928 -1.719791,-2.96928 -1.414704,0 -1.719792,0.68408 -1.719792,3.8562 0,2.3527 0.07385,2.78996 0.604474,3.57915 0.34206,0.50874 1.002512,1.03847 1.521355,1.22025 1.096935,0.38431 11.042196,0.40261 12.35145,0.0227 z"/>
       </g>
     </svg>
-    <h1>Moose – Générateur d'URL Grist</h1>
+    <h1>Moose – Générateur d'URL Grist/DN</h1>
   </div>
 
   <!-- Statut connexion Grist -->
@@ -318,7 +318,7 @@
 
   <!-- Info -->
   <div class="alert alert--info">
-    <strong>Information</strong><br/><span style="display:block;margin-top:0.25rem">Cet outil vous permet de générer des URLs d'API Grist avec filtres dynamiques pour intégrer vos données dans le champ référentiel avancé de Démarche Numérique.</span>
+    <strong>Information</strong><br/><span style="display:block;margin-top:0.25rem">Cet outil vous permet de générer des URLs d'API Grist avec filtres dynamiques pour intégrer vos données dans le <a href="https://doc.demarches-simplifiees.fr/tutoriels/champ-referentiel-avance-a-configurer" target="_blank" rel="noopener noreferrer" >champ référentiel avancé</a> de Démarche Numérique.</span>
   </div>
 
   <!-- Formulaire -->
@@ -770,9 +770,6 @@ async function initWidget() {
 }
 
 </script>
-
-<!-- DSFR JS (optionnel, pour les composants DSFR interactifs si besoin) -->
-<script type="module" src="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.11.2/dist/dsfr.module.min.js"></script>
 
 </body>
 </html>
