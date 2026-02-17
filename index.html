@@ -14,59 +14,71 @@
     /* ── Reset ── */
     *, *::before, *::after { box-sizing: border-box; }
 
-    /* ── Base fluide ── */
+    /* ── Base ── */
     html, body {
       margin: 0;
       padding: 0;
       background: #f6f6f6;
       font-family: Marianne, Arial, sans-serif;
-      /* Taille fluide : 14px à 280px, 16px à 700px+ */
-      font-size: clamp(14px, 1.5vw + 10px, 16px);
+      font-size: 15px;
       line-height: 1.5;
     }
 
     .widget-container {
       max-width: 720px;
       margin: 0 auto;
-      padding: clamp(0.75rem, 3vw, 1.5rem) clamp(0.75rem, 3vw, 1.25rem) 2rem;
+      padding: 1.25rem 1rem 2rem;
     }
+
+    /* ── Breakpoints via ResizeObserver ── */
+    /* narrow  : < 380px  → .w-narrow  */
+    /* medium  : 380–560px → .w-medium  */
+    /* large   : > 560px  → (défaut)   */
+
+    .w-narrow { font-size: 13px; }
+    .w-medium { font-size: 14px; }
+
+    .w-narrow .widget-container { padding: 0.6rem 0.6rem 1.5rem; }
+    .w-medium .widget-container { padding: 0.875rem 0.75rem 2rem; }
 
     /* ── Header ── */
     .widget-header {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
+      margin-bottom: 1.1rem;
       padding-bottom: 0.6rem;
       border-bottom: 2px solid #000091;
     }
-    .widget-header svg {
-      flex-shrink: 0;
-      width: clamp(32px, 5vw, 48px);
-      height: auto;
-    }
+    .widget-header svg { flex-shrink: 0; }
+    .w-narrow .widget-header svg { width: 30px; height: auto; }
+    .w-medium .widget-header svg { width: 38px; height: auto; }
+
     .widget-header h1 {
-      font-size: clamp(1rem, 2.5vw + 0.5rem, 1.3rem);
+      font-size: 1.2rem;
       font-weight: 700;
       margin: 0;
       color: #000091;
       line-height: 1.2;
     }
+    .w-narrow .widget-header h1 { font-size: 0.95rem; }
+    .w-medium .widget-header h1 { font-size: 1.05rem; }
 
     /* ── Statut connexion ── */
     #grist-status {
       display: flex;
       align-items: center;
       gap: 0.4rem;
-      font-size: clamp(0.75rem, 1.5vw + 0.4rem, 0.875rem);
+      font-size: 0.85rem;
       padding: 0.35rem 0.75rem;
       border-radius: 1rem;
       margin-bottom: 0.875rem;
       font-weight: 500;
     }
-    #grist-status.status-ok    { background: #dffee7; color: #18753c; }
+    .w-narrow #grist-status { font-size: 0.75rem; padding: 0.3rem 0.6rem; }
+    #grist-status.status-ok      { background: #dffee7; color: #18753c; }
     #grist-status.status-loading { background: #e8edff; color: #000091; }
-    #grist-status.status-error { background: #ffe9e9; color: #ce0500; }
+    #grist-status.status-error   { background: #ffe9e9; color: #ce0500; }
     #grist-status .dot {
       width: 8px; height: 8px;
       border-radius: 50%;
@@ -80,27 +92,34 @@
     .fr-label {
       display: block;
       font-weight: 600;
-      font-size: clamp(0.8rem, 1.5vw + 0.4rem, 0.95rem);
+      font-size: 0.9rem;
     }
+    .w-narrow .fr-label { font-size: 0.82rem; }
+
     .fr-hint-text {
       display: block;
-      font-size: clamp(0.72rem, 1vw + 0.4rem, 0.82rem);
+      font-size: 0.8rem;
       color: #666;
       margin-top: 0.15rem;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.2rem;
     }
-    .fr-select-group { margin-bottom: clamp(0.75rem, 2vw, 1.1rem); }
+    .w-narrow .fr-hint-text { font-size: 0.72rem; }
+
+    .fr-select-group { margin-bottom: 1rem; }
+    .w-narrow .fr-select-group { margin-bottom: 0.75rem; }
+
     .fr-select {
       width: 100%;
-      padding: clamp(0.4rem, 1vw, 0.6rem) 0.75rem;
+      padding: 0.5rem 0.75rem;
       border: 1px solid #929292;
       border-radius: 0.25rem;
       background: white;
-      font-size: clamp(0.8rem, 1.5vw + 0.4rem, 0.95rem);
+      font-size: 0.9rem;
       font-family: inherit;
       margin-top: 0.2rem;
       appearance: auto;
     }
+    .w-narrow .fr-select { padding: 0.4rem 0.6rem; font-size: 0.82rem; }
     .fr-select:disabled { background: #e5e5e5; color: #929292; cursor: not-allowed; }
     .fr-select:focus { outline: 2px solid #0a76f6; outline-offset: 2px; }
 
@@ -108,23 +127,25 @@
     .fr-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 0.4rem;
-      padding: clamp(0.4rem, 1vw, 0.55rem) clamp(0.75rem, 2vw, 1rem);
+      padding: 0.5rem 1rem;
       border: none;
       border-radius: 0.25rem;
       font-family: inherit;
-      font-size: clamp(0.8rem, 1.5vw + 0.4rem, 0.95rem);
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       text-decoration: none;
       transition: background 0.15s, color 0.15s;
     }
+    .w-narrow .fr-btn { padding: 0.4rem 0.75rem; font-size: 0.82rem; }
     .fr-btn:not(.fr-btn--secondary) { background: #000091; color: white; }
     .fr-btn:not(.fr-btn--secondary):hover { background: #1212ff; }
     .fr-btn--secondary { background: transparent; color: #000091; border: 1px solid currentColor; }
     .fr-btn--secondary:hover { background: #f0f0ff; }
     .fr-btn:disabled { background: #e5e5e5; color: #929292; border-color: transparent; cursor: not-allowed; }
-    .fr-btn--sm { padding: 0.3rem 0.65rem; font-size: clamp(0.75rem, 1vw + 0.4rem, 0.85rem); }
+    .fr-btn--sm { padding: 0.3rem 0.65rem; font-size: 0.82rem; }
     .fr-btn--loading { pointer-events: none; opacity: 0.7; }
 
     .btns-row {
@@ -133,20 +154,18 @@
       gap: 0.5rem;
       margin-top: 0.875rem;
     }
-    /* Narrow : boutons pleine largeur */
-    @container (max-width: 360px) {
-      .btns-row { flex-direction: column; }
-      .btns-row .fr-btn { width: 100%; justify-content: center; }
-    }
+    .w-narrow .btns-row { flex-direction: column; }
+    .w-narrow .btns-row .fr-btn { width: 100%; }
 
     /* ── Alerte ── */
     .alert {
-      padding: clamp(0.6rem, 2vw, 0.875rem) clamp(0.75rem, 2vw, 1rem);
+      padding: 0.75rem 1rem;
       border-radius: 0.25rem;
-      font-size: clamp(0.8rem, 1.5vw + 0.4rem, 0.95rem);
+      font-size: 0.9rem;
       margin-bottom: 0.875rem;
       line-height: 1.5;
     }
+    .w-narrow .alert { padding: 0.6rem 0.75rem; font-size: 0.8rem; }
     .alert--info    { background: #e8edff; color: #000091; border-left: 3px solid #000091; }
     .alert--error   { background: #ffe9e9; color: #ce0500; border-left: 3px solid #ce0500; }
     .alert--success { background: #dffee7; color: #18753c; border-left: 3px solid #18753c; }
@@ -160,9 +179,11 @@
       background: #000091; color: white;
       padding: 0.55rem 1rem;
       font-weight: 700;
-      font-size: clamp(0.8rem, 1.5vw + 0.4rem, 0.95rem);
+      font-size: 0.9rem;
     }
-    .result-card-body { padding: clamp(0.75rem, 2vw, 1rem); background: white; }
+    .w-narrow .result-card-header { font-size: 0.82rem; padding: 0.45rem 0.75rem; }
+    .result-card-body { padding: 1rem; background: white; }
+    .w-narrow .result-card-body { padding: 0.75rem; }
 
     .url-block {
       background: #f4f4f4;
@@ -172,25 +193,22 @@
       margin-bottom: 0.875rem;
       word-break: break-all;
       font-family: 'Courier New', monospace;
-      font-size: clamp(0.7rem, 1vw + 0.4rem, 0.8rem);
+      font-size: 0.75rem;
       line-height: 1.5;
     }
+    .w-narrow .url-block { font-size: 0.68rem; padding: 0.5rem 0.6rem; }
 
     .meta-grid {
       display: grid;
       grid-template-columns: auto 1fr;
       gap: 0.2rem 0.6rem;
-      font-size: clamp(0.75rem, 1vw + 0.4rem, 0.85rem);
+      font-size: 0.82rem;
       margin-bottom: 0.875rem;
     }
     .meta-grid dt { font-weight: 600; color: #555; white-space: nowrap; }
     .meta-grid dd { margin: 0; color: #333; word-break: break-word; }
-
-    /* Narrow : meta en colonne unique */
-    @media (max-width: 380px) {
-      .meta-grid { grid-template-columns: 1fr; gap: 0.1rem; }
-      .meta-grid dt { margin-top: 0.4rem; }
-    }
+    .w-narrow .meta-grid { grid-template-columns: 1fr; }
+    .w-narrow .meta-grid dt { margin-top: 0.35rem; color: #444; }
 
     /* ── Accordéon ── */
     .accordion { border: 1px solid #ddd; border-radius: 0.25rem; margin-top: 0.875rem; }
@@ -200,7 +218,7 @@
       background: #f8f8f8;
       border: none;
       text-align: left;
-      font-size: clamp(0.78rem, 1.2vw + 0.4rem, 0.9rem);
+      font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
       display: flex;
@@ -209,6 +227,7 @@
       font-family: inherit;
       gap: 0.5rem;
     }
+    .w-narrow .accordion__btn { font-size: 0.78rem; padding: 0.55rem 0.75rem; }
     .accordion__btn:hover { background: #ebebeb; }
     .accordion__btn::after { content: "▾"; flex-shrink: 0; transition: transform 0.2s; }
     .accordion__btn[aria-expanded="true"]::after { transform: rotate(180deg); }
@@ -217,7 +236,7 @@
     .accordion__body pre {
       margin: 0;
       padding: 0.65rem 0.875rem;
-      font-size: clamp(0.68rem, 1vw + 0.3rem, 0.78rem);
+      font-size: 0.75rem;
       font-family: 'Courier New', monospace;
       line-height: 1.4;
       white-space: pre-wrap;
@@ -225,6 +244,7 @@
       background: #f4f4f4;
       border-top: 1px solid #ddd;
     }
+    .w-narrow .accordion__body pre { font-size: 0.68rem; }
 
     /* ── Toast ── */
     #toast {
@@ -232,7 +252,7 @@
       bottom: 1rem; right: 1rem;
       padding: 0.55rem 0.875rem;
       border-radius: 0.25rem;
-      font-size: clamp(0.8rem, 1.5vw + 0.4rem, 0.9rem);
+      font-size: 0.85rem;
       font-weight: 600;
       background: #18753c;
       color: white;
@@ -259,22 +279,19 @@
     .modal-box {
       background: white;
       border-radius: 0.375rem;
-      padding: clamp(1rem, 4vw, 1.5rem);
+      padding: 1.25rem;
       width: 100%;
       max-width: 380px;
       box-shadow: 0 4px 24px rgba(0,0,0,0.18);
     }
-    .modal-box h2 {
-      font-size: clamp(0.9rem, 2vw + 0.4rem, 1.05rem);
-      margin: 0 0 0.75rem;
-    }
+    .modal-box h2 { font-size: 1rem; margin: 0 0 0.75rem; }
     .modal-box input {
       width: 100%;
-      padding: clamp(0.4rem, 1vw, 0.55rem) 0.75rem;
+      padding: 0.5rem 0.75rem;
       border: 1px solid #929292;
       border-radius: 0.25rem;
       font-family: inherit;
-      font-size: clamp(0.8rem, 1.5vw + 0.4rem, 0.95rem);
+      font-size: 0.9rem;
       margin-bottom: 1rem;
     }
     .modal-box input:focus { outline: 2px solid #0a76f6; outline-offset: 2px; }
@@ -356,6 +373,20 @@
 </div>
 
 <script>
+// ──────────────────────────────────────────────
+// RESPONSIVE via ResizeObserver
+// ──────────────────────────────────────────────
+(function() {
+  const body = document.body;
+  const observer = new ResizeObserver(entries => {
+    const width = entries[0].contentRect.width;
+    body.classList.remove('w-narrow', 'w-medium');
+    if (width < 380) body.classList.add('w-narrow');
+    else if (width < 560) body.classList.add('w-medium');
+  });
+  observer.observe(body);
+})();
+
 // ──────────────────────────────────────────────
 // CONFIG
 // ──────────────────────────────────────────────
