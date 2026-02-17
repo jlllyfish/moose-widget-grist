@@ -505,7 +505,8 @@ async function loadColumns(tableName) {
   try {
     // On utilise l'access token pour appeler l'API REST
     const tokenInfo = await getToken(true);
-    const url = `${tokenInfo.baseUrl}/api/docs/${docId}/tables/${tableName}/columns`;
+    // tokenInfo.baseUrl = https://grist.../api/docs/DOC_ID
+    const url = `${tokenInfo.baseUrl}/tables/${tableName}/columns`;
     const resp = await fetch(url, {
       headers: { Authorization: `Bearer ${tokenInfo.token}` }
     });
