@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🦌 Moose – Générateur d'URL Grist</title>
+
+  <!-- DSFR -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.11.2/dist/dsfr.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.11.2/dist/utility/icons/icons.min.css" />
+
+  <!-- Grist Plugin API -->
+  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+
+  <style>
+    /* ── Layout widget compact ── */
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--background-default-grey, #f6f6f6);
+      font-family: Marianne, Arial, sans-serif;
+      font-size: 14px;
+    }
+
+    .widget-container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 1.25rem 1rem 2rem;
+    }
+
+    .widget-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--border-default-blue-france, #000091);
+    }
+
+    .widget-header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin: 0;
+      color: var(--text-title-blue-france, #000091);
+    }
+
+    /* ── Statut de connexion Grist ── */
+    #grist-status {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 1rem;
+      margin-bottom: 1rem;
+      font-weight: 500;
+    }
+    #grist-status.status-ok {
+      background: #dffee7;
+      color: #18753c;
+    }
+    #grist-status.status-loading {
+      background: #e8edff;
+      color: #000091;
+    }
+    #grist-status.status-error {
+      background: #ffe9e9;
+      color: #ce0500;
+    }
+    #grist-status .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+    #grist-status.status-loading .dot {
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── Formulaire ── */
+    .fr-label { font-weight: 600; font-size: 0.875rem; }
+    .fr-hint-text { font-size: 0.775rem; color: var(--text-mention-grey, #666); margin-top: 0.1rem; }
+
+    .fr-select-group { margin-bottom: 1rem; }
+    .fr-select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border-default-grey, #929292);
+      border-radius: 0.25rem;
+      background: white;
+      font-size: 0.875rem;
+      font-family: inherit;
+      margin-top: 0.3rem;
+      appearance: auto;
+    }
+    .fr-select:disabled {
+      background: var(--background-disabled-grey, #e5e5e5);
+      color: var(--text-disabled-grey, #929292);
+      cursor: not-allowed;
+    }
+    .fr-select:focus {
+      outline: 2px solid var(--focus-color, #0a76f6);
+      outline-offset: 2px;
+    }
+
+    /* ── Boutons ── */
+    .fr-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 0.25rem;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .fr-btn--primary, .fr-btn:not(.fr-btn--secondary) {
+      background: var(--background-action-high-blue-france, #000091);
+      color: white;
+    }
+    .fr-btn--primary:hover { background: #1212ff; }
+    .fr-btn--secondary {
+      background: transparent;
+      color: var(--text-action-high-blue-france, #000091);
+      border: 1px solid currentColor;
+    }
+    .fr-btn--secondary:hover { background: #f0f0ff; }
+    .fr-btn:disabled {
+      background: var(--background-disabled-grey, #e5e5e5);
+      color: var(--text-disabled-grey, #929292);
+      border-color: transparent;
+      cursor: not-allowed;
+    }
+    .fr-btn--sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+    .fr-btn--loading { pointer-events: none; opacity: 0.7; }
+
+    .btns-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    /* ── Résultat ── */
+    #result { margin-top: 1.25rem; }
+
+    .result-card {
+      border: 1px solid var(--border-default-grey, #ddd);
+      border-radius: 0.375rem;
+      overflow: hidden;
+    }
+
+    .result-card-header {
+      background: var(--background-action-high-blue-france, #000091);
+      color: white;
+      padding: 0.6rem 1rem;
+      font-weight: 700;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .result-card-body { padding: 1rem; background: white; }
+
+    .url-block {
+      background: #f4f4f4;
+      border-left: 3px solid var(--border-default-blue-france, #000091);
+      padding: 0.75rem 1rem;
+      border-radius: 0 0.25rem 0.25rem 0;
+      margin-bottom: 1rem;
+      word-break: break-all;
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.25rem 0.75rem;
+      font-size: 0.8rem;
+      margin-bottom: 1rem;
+    }
+    .meta-grid dt { font-weight: 600; color: #555; white-space: nowrap; }
+    .meta-grid dd { margin: 0; color: #333; }
+
+    /* ── Alerte info / erreur ── */
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 0.25rem;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-start;
+    }
+    .alert--info { background: #e8edff; color: #000091; border-left: 3px solid #000091; }
+    .alert--error { background: #ffe9e9; color: #ce0500; border-left: 3px solid #ce0500; }
+    .alert--success { background: #dffee7; color: #18753c; border-left: 3px solid #18753c; }
+
+    /* ── Accordéon résultat test ── */
+    .accordion { border: 1px solid #ddd; border-radius: 0.25rem; margin-top: 1rem; }
+    .accordion__btn {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: #f8f8f8;
+      border: none;
+      text-align: left;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: inherit;
+    }
+    .accordion__btn:hover { background: #ebebeb; }
+    .accordion__btn::after { content: "▾"; transition: transform 0.2s; }
+    .accordion__btn[aria-expanded="true"]::after { transform: rotate(180deg); }
+    .accordion__body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .accordion__body.open { max-height: 400px; overflow-y: auto; }
+    .accordion__body pre {
+      margin: 0;
+      padding: 0.75rem 1rem;
+      font-size: 0.78rem;
+      font-family: 'Courier New', monospace;
+      line-height: 1.4;
+      white-space: pre-wrap;
+      word-break: break-all;
+      background: #f4f4f4;
+      border-top: 1px solid #ddd;
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      padding: 0.6rem 1rem;
+      border-radius: 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: #18753c;
+      color: white;
+      opacity: 0;
+      transform: translateY(0.5rem);
+      transition: opacity 0.2s, transform 0.2s;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+
+    /* ── Modale test valeur ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: white;
+      border-radius: 0.375rem;
+      padding: 1.5rem;
+      width: 360px;
+      max-width: 95vw;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+    }
+    .modal-box h2 { font-size: 1rem; margin: 0 0 0.75rem; }
+    .modal-box input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #929292;
+      border-radius: 0.25rem;
+      font-family: inherit;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+    .modal-box input:focus { outline: 2px solid #0a76f6; outline-offset: 2px; }
+    .modal-btns { display: flex; justify-content: flex-end; gap: 0.5rem; }
+  </style>
+</head>
+<body>
+
+<div class="widget-container">
+
+  <!-- En-tête -->
+  <div class="widget-header">
+    <svg width="48" height="38" viewBox="0 0 27.74049 21.695971" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false" style="flex-shrink:0">
+      <g transform="translate(-75.083443,-40.067527)">
+        <path fill="#000091" d="m 92.723186,60.206519 c -0.0895,-0.85628 -0.35314,-2.11772 -0.58587,-2.80321 -0.23273,-0.68548 -0.38371,-1.28577 -0.33551,-1.33397 0.0482,-0.0482 0.80089,0.15664 1.67266,0.4552 2.3434,0.80256 6.29071,0.79991 7.593244,-0.005 2.26575,-1.40031 2.35585,-4.60329 0.17328,-6.15994 -0.87771,-0.626 -0.98579,-0.63576 -7.933004,-0.71633 -6.227857,-0.0722 -7.093091,-0.0318 -7.474478,0.34963 -0.371861,0.37186 -0.431316,1.21284 -0.431316,6.10096 v 5.66964 h 3.741859 3.741855 z m -3.883228,-7.30885 c -0.177082,-0.21337 -0.252852,-0.56806 -0.168378,-0.78819 0.202301,-0.52719 1.128072,-0.5145 1.332513,0.0183 0.223297,0.5819 0.22053,0.58913 -0.340785,0.88953 -0.371633,0.19889 -0.584704,0.16794 -0.82335,-0.11961 z m 0.720763,-4.15177 c 0.468181,-0.13584 1.152795,-0.60536 1.521355,-1.04338 0.56885,-0.67603 0.67012,-1.06007 0.67012,-2.54119 0,-1.25226 -0.12361,-1.88139 -0.43789,-2.22866 -0.896,-0.99007 -2.737114,-0.30102 -2.737114,1.02439 0,0.77433 -1.102322,1.93134 -1.840056,1.93134 -0.973035,0 -1.599527,-0.92515 -1.599527,-2.36205 0,-1.09328 -0.112523,-1.39222 -0.69714,-1.85208 -0.856636,-0.67383 -1.192598,-0.68466 -1.960115,-0.0632 -0.45817,0.371 -0.628638,0.84007 -0.724232,1.99281 -0.130125,1.56914 -0.663849,2.28448 -1.704468,2.28448 -1.022508,0 -1.528629,-0.94413 -1.528629,-2.85155 0,-2.22297 -0.432262,-2.96928 -1.719791,-2.96928 -1.414704,0 -1.719792,0.68408 -1.719792,3.8562 0,2.3527 0.07385,2.78996 0.604474,3.57915 0.34206,0.50874 1.002512,1.03847 1.521355,1.22025 1.096935,0.38431 11.042196,0.40261 12.35145,0.0227 z"/>
+      </g>
+    </svg>
+    <h1>Moose – Générateur d'URL Grist</h1>
+  </div>
+
+  <!-- Statut connexion Grist -->
+  <div id="grist-status" class="status-loading">
+    <span class="dot"></span>
+    <span id="grist-status-text">Connexion à Grist…</span>
+  </div>
+
+  <!-- Info -->
+  <div class="alert alert--info">
+    Génère des URLs d'API Grist avec filtre dynamique <code>{id}</code> pour intégration dans le champ référentiel avancé de Démarche Numérique.
+  </div>
+
+  <!-- Formulaire -->
+  <form id="urlForm">
+
+    <!-- Sélection table -->
+    <div class="fr-select-group">
+      <label class="fr-label" for="table_name">Table</label>
+      <div class="fr-hint-text">Tables du document courant</div>
+      <select class="fr-select" id="table_name" name="table_name" required disabled>
+        <option value="">-- Chargement… --</option>
+      </select>
+    </div>
+
+    <!-- Sélection colonne -->
+    <div class="fr-select-group">
+      <label class="fr-label" for="column_name">Colonne de filtre</label>
+      <div class="fr-hint-text">Colonne sur laquelle appliquer le filtre <code>{id}</code></div>
+      <select class="fr-select" id="column_name" name="column_name" required disabled>
+        <option value="">-- Choisir d'abord une table --</option>
+      </select>
+    </div>
+
+    <div class="btns-row">
+      <button type="submit" class="fr-btn" id="generateBtn" disabled>
+        Générer l'URL
+      </button>
+    </div>
+
+  </form>
+
+  <!-- Zone résultat -->
+  <div id="result"></div>
+
+</div>
+
+<!-- Toast copie -->
+<div id="toast">✓ URL copiée !</div>
+
+<!-- Modale valeur de test -->
+<div class="modal-overlay" id="testModal">
+  <div class="modal-box">
+    <h2>Valeur de test pour <code>{id}</code></h2>
+    <input type="text" id="testValueInput" placeholder="Ex : LPA, 75, mon-code…" />
+    <div class="modal-btns">
+      <button class="fr-btn fr-btn--secondary fr-btn--sm" id="cancelTestBtn">Annuler</button>
+      <button class="fr-btn fr-btn--sm" id="confirmTestBtn">Tester</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────────────
+// CONFIG
+// ──────────────────────────────────────────────
+const GRIST_BASE_URL = "https://grist.numerique.gouv.fr";
+const EXCLUDED_TABLES = new Set([
+  'GristDocTour', 'GristHidden_import',
+  '_grist_Tables', '_grist_Tables_column',
+  '_grist_Views', '_grist_Views_section',
+  '_grist_Views_section_field', '_grist_TabBar',
+  '_grist_Pages', '_grist_Attachments',
+  '_grist_Cells', '_grist_ACLResources',
+  '_grist_ACLRules', '_grist_ACLMemberships'
+]);
+
+// ──────────────────────────────────────────────
+// ÉTAT
+// ──────────────────────────────────────────────
+let docId = null;
+let currentUrl = null;
+
+// ──────────────────────────────────────────────
+// ÉLÉMENTS DOM
+// ──────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const tableSelect  = $('table_name');
+const columnSelect = $('column_name');
+const generateBtn  = $('generateBtn');
+const resultDiv    = $('result');
+const toast        = $('toast');
+const testModal    = $('testModal');
+const testInput    = $('testValueInput');
+
+// ──────────────────────────────────────────────
+// STATUT CONNEXION
+// ──────────────────────────────────────────────
+function setStatus(state, text) {
+  const el = $('grist-status');
+  el.className = `status-${state}`;
+  $('grist-status-text').textContent = text;
+}
+
+// ──────────────────────────────────────────────
+// UTILITAIRES
+// ──────────────────────────────────────────────
+function showToast(msg = '✓ URL copiée !') {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function setLoading(btn, loading, label) {
+  if (loading) {
+    btn.dataset.orig = btn.textContent;
+    btn.textContent = 'Chargement…';
+    btn.classList.add('fr-btn--loading');
+    btn.disabled = true;
+  } else {
+    btn.textContent = btn.dataset.orig || label || btn.textContent;
+    btn.classList.remove('fr-btn--loading');
+    btn.disabled = false;
+    delete btn.dataset.orig;
+  }
+}
+
+function generateFilterUrl(dId, table, column) {
+  const filterJson = `{"${column}":["PLACEHOLDER_ID"]}`;
+  let encoded = encodeURIComponent(filterJson);
+  encoded = encoded.replace('PLACEHOLDER_ID', '{id}');
+  return `${GRIST_BASE_URL}/api/docs/${dId}/tables/${table}/records?filter=${encoded}`;
+}
+
+// ──────────────────────────────────────────────
+// ACCESS TOKEN → appels REST depuis le widget
+// ──────────────────────────────────────────────
+async function getToken(readOnly = true) {
+  const info = await grist.docApi.getAccessToken({ readOnly });
+  return info; // { token, baseUrl, ttlMsecs }
+}
+
+// ──────────────────────────────────────────────
+// CHARGEMENT DES TABLES
+// ──────────────────────────────────────────────
+async function loadTables() {
+  setStatus('loading', 'Chargement des tables…');
+  tableSelect.disabled = true;
+  tableSelect.innerHTML = '<option value="">-- Chargement… --</option>';
+  columnSelect.innerHTML = '<option value="">-- Choisir d\'abord une table --</option>';
+  columnSelect.disabled = true;
+  generateBtn.disabled = true;
+  resultDiv.innerHTML = '';
+
+  try {
+    // listTables() disponible nativement sans token
+    const tables = await grist.docApi.listTables();
+    const filtered = tables.filter(t => !t.startsWith('_grist_') && !EXCLUDED_TABLES.has(t));
+
+    if (filtered.length === 0) {
+      tableSelect.innerHTML = '<option value="">-- Aucune table disponible --</option>';
+      setStatus('error', 'Aucune table accessible (vérifiez le niveau d\'accès)');
+      return;
+    }
+
+    tableSelect.innerHTML = '<option value="">-- Choisir une table --</option>';
+    filtered.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t;
+      opt.textContent = t;
+      tableSelect.appendChild(opt);
+    });
+    tableSelect.disabled = false;
+    setStatus('ok', `Connecté · ${filtered.length} table${filtered.length > 1 ? 's' : ''} disponible${filtered.length > 1 ? 's' : ''}`);
+
+  } catch (err) {
+    console.error('[Moose] loadTables:', err);
+    tableSelect.innerHTML = '<option value="">-- Erreur de chargement --</option>';
+    setStatus('error', `Erreur : ${err.message}`);
+  }
+}
+
+// ──────────────────────────────────────────────
+// CHARGEMENT DES COLONNES
+// ──────────────────────────────────────────────
+async function loadColumns(tableName) {
+  columnSelect.innerHTML = '<option value="">-- Chargement… --</option>';
+  columnSelect.disabled = true;
+  generateBtn.disabled = true;
+  resultDiv.innerHTML = '';
+
+  try {
+    // On utilise l'access token pour appeler l'API REST
+    const tokenInfo = await getToken(true);
+    const url = `${tokenInfo.baseUrl}/api/docs/${docId}/tables/${tableName}/columns`;
+    const resp = await fetch(url, {
+      headers: { Authorization: `Bearer ${tokenInfo.token}` }
+    });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    const cols = (data.columns || []).map(c => c.id);
+    if (cols.length === 0) {
+      columnSelect.innerHTML = '<option value="">-- Aucune colonne --</option>';
+      return;
+    }
+
+    columnSelect.innerHTML = '<option value="">-- Choisir une colonne --</option>';
+    cols.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c;
+      opt.textContent = c;
+      columnSelect.appendChild(opt);
+    });
+    columnSelect.disabled = false;
+
+  } catch (err) {
+    console.error('[Moose] loadColumns:', err);
+    columnSelect.innerHTML = `<option value="">-- Erreur : ${err.message} --</option>`;
+  }
+}
+
+// ──────────────────────────────────────────────
+// AFFICHAGE RÉSULTAT
+// ──────────────────────────────────────────────
+function showResult(url, table, column) {
+  currentUrl = url;
+  resultDiv.innerHTML = `
+    <div class="result-card">
+      <div class="result-card-header">
+        ✅ URL générée
+      </div>
+      <div class="result-card-body">
+        <div class="url-block" id="url-display">${url}</div>
+        <dl class="meta-grid">
+          <dt>Document ID :</dt><dd id="meta-docid">${docId}</dd>
+          <dt>Table :</dt><dd>${table}</dd>
+          <dt>Colonne :</dt><dd>${column}</dd>
+          <dt>Placeholder :</dt><dd><code>{id}</code> sera remplacé par la valeur filtrée</dd>
+        </dl>
+        <div class="btns-row">
+          <button class="fr-btn fr-btn--secondary fr-btn--sm" id="copyBtn">
+            📋 Copier l'URL
+          </button>
+          <button class="fr-btn fr-btn--sm" id="testBtn">
+            🧪 Tester l'URL
+          </button>
+        </div>
+        <div id="test-result-zone"></div>
+      </div>
+    </div>
+  `;
+
+  $('copyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(url)
+      .then(() => showToast('✓ URL copiée !'))
+      .catch(() => {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('✓ URL copiée !');
+      });
+  });
+
+  $('testBtn').addEventListener('click', openTestModal);
+}
+
+// ──────────────────────────────────────────────
+// MODALE TEST + APPEL API
+// ──────────────────────────────────────────────
+function openTestModal() {
+  testInput.value = '';
+  testModal.classList.add('open');
+  setTimeout(() => testInput.focus(), 50);
+}
+
+function closeTestModal() {
+  testModal.classList.remove('open');
+}
+
+$('cancelTestBtn').addEventListener('click', closeTestModal);
+
+testModal.addEventListener('click', e => {
+  if (e.target === testModal) closeTestModal();
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && testModal.classList.contains('open')) closeTestModal();
+  if (e.key === 'Enter' && testModal.classList.contains('open')) runTest();
+});
+
+$('confirmTestBtn').addEventListener('click', runTest);
+
+async function runTest() {
+  const val = testInput.value.trim();
+  if (!val) return;
+  closeTestModal();
+
+  const zone = $('test-result-zone');
+  if (!zone) return;
+
+  const testUrl = currentUrl.replace('{id}', encodeURIComponent(val));
+
+  zone.innerHTML = `
+    <div class="accordion" id="test-accordion">
+      <button class="accordion__btn" aria-expanded="true" id="accordion-toggle">
+        🧪 Test avec <code>"${val}"</code> – chargement…
+      </button>
+      <div class="accordion__body open" id="accordion-body">
+        <pre id="test-json">Chargement…</pre>
+      </div>
+    </div>
+  `;
+
+  // Toggle accordéon
+  $('accordion-toggle').addEventListener('click', function() {
+    const expanded = this.getAttribute('aria-expanded') === 'true';
+    this.setAttribute('aria-expanded', String(!expanded));
+    $('accordion-body').classList.toggle('open', !expanded);
+  });
+
+  try {
+    const tokenInfo = await getToken(true);
+    const resp = await fetch(testUrl, {
+      headers: { Authorization: `Bearer ${tokenInfo.token}` }
+    });
+    const data = await resp.json();
+    const count = (data.records || []).length;
+
+    $('accordion-toggle').innerHTML = `🧪 Test avec <code>"${val}"</code> – ${count} enregistrement${count > 1 ? 's' : ''} trouvé${count > 1 ? 's' : ''}`;
+    $('test-json').textContent = JSON.stringify(data, null, 2);
+
+  } catch (err) {
+    $('accordion-toggle').innerHTML = `❌ Erreur lors du test avec <code>"${val}"</code>`;
+    $('test-json').textContent = `Erreur : ${err.message}\n\nURL testée :\n${testUrl}`;
+  }
+}
+
+// ──────────────────────────────────────────────
+// ÉVÉNEMENTS FORMULAIRE
+// ──────────────────────────────────────────────
+tableSelect.addEventListener('change', function() {
+  if (this.value) {
+    loadColumns(this.value);
+  } else {
+    columnSelect.innerHTML = '<option value="">-- Choisir d\'abord une table --</option>';
+    columnSelect.disabled = true;
+    generateBtn.disabled = true;
+    resultDiv.innerHTML = '';
+  }
+});
+
+columnSelect.addEventListener('change', function() {
+  generateBtn.disabled = !this.value;
+  resultDiv.innerHTML = '';
+  currentUrl = null;
+});
+
+$('urlForm').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const table  = tableSelect.value;
+  const column = columnSelect.value;
+  if (!table || !column || !docId) return;
+
+  setLoading(generateBtn, true);
+  resultDiv.innerHTML = '';
+
+  try {
+    const url = generateFilterUrl(docId, table, column);
+    showResult(url, table, column);
+  } catch (err) {
+    resultDiv.innerHTML = `<div class="alert alert--error">❌ Erreur : ${err.message}</div>`;
+  }
+
+  setLoading(generateBtn, false, 'Générer l\'URL');
+  generateBtn.disabled = false;
+});
+
+// ──────────────────────────────────────────────
+// INITIALISATION GRIST
+// ──────────────────────────────────────────────
+grist.ready({
+  requiredAccess: 'full',
+  onEditOptions: undefined
+});
+
+// Récupération du docId depuis l'URL Grist (window.location)
+function extractDocIdFromUrl() {
+  const match = window.location.href.match(/\/docs\/([^/]+)/);
+  return match ? match[1] : null;
+}
+
+// grist.ready() → ensuite on charge les tables
+// On utilise onOptions pour détecter que Grist a bien chargé le widget
+grist.onOptions(async (opts, interaction) => {
+  // Récupérer le docId
+  docId = extractDocIdFromUrl();
+
+  if (!docId) {
+    // Fallback : essayer via getSelectedTableId qui contient parfois l'info
+    try {
+      const tid = await grist.getSelectedTableId();
+      // L'URL du parent contient le docId
+      if (window.parent !== window) {
+        // On est dans un iframe — tenter de le lire depuis referrer ou location
+        const ref = document.referrer;
+        const m = ref.match(/\/docs\/([^/]+)/);
+        if (m) docId = m[1];
+      }
+    } catch(e) {}
+  }
+
+  if (!docId) {
+    setStatus('error', 'Impossible de détecter l\'ID du document');
+    tableSelect.innerHTML = '<option value="">-- DocId non trouvé --</option>';
+    return;
+  }
+
+  await loadTables();
+});
+
+// Fallback si onOptions ne se déclenche pas (accès "none" initial)
+setTimeout(async () => {
+  if (!docId) {
+    docId = extractDocIdFromUrl();
+    if (docId) await loadTables();
+  }
+}, 1500);
+
+</script>
+
+<!-- DSFR JS (optionnel, pour les composants DSFR interactifs si besoin) -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@gouvfr/dsfr@1.11.2/dist/dsfr.module.min.js"></script>
+
+</body>
+</html>
