@@ -723,18 +723,19 @@ async function initWidget() {
   if (docId) return; // déjà initialisé
 
   try {
-    // getAccessToken retourne baseUrl de la forme :
-    // https://grist.numerique.gouv.fr/api/docs/DOC_ID
     const tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
-    const m = tokenInfo.baseUrl.match(/\/docs\/([^/]+)/);
-    if (m) {
-      docId = m[1];
-    } else {
-      throw new Error('docId introuvable dans baseUrl : ' + tokenInfo.baseUrl);
-    }
+    // Décoder le payload JWT pour extraire docId
+    const payload = JSON.parse(atob(tokenInfo.token.split('.')[1]));
+    docId = payload.docId;
+    if (!docId) throw new Error('docId absent du payload JWT');
   } catch(err) {
-    // Dernier fallback : URL courante
-    docId = extractDocIdFromUrl();
+    console.warn('[Moose] JWT docId failed:', err);
+    // Fallback : extraire depuis baseUrl
+    try {
+      const tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
+      const m = tokenInfo.baseUrl.match(/\/docs\/([^/]+)/);
+      if (m) docId = m[1];
+    } catch(e) {}
   }
 
   if (!docId) {
