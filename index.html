@@ -15,19 +15,20 @@
     *, *::before, *::after { box-sizing: border-box; }
 
     /* ── Base ── */
-    html, body {
+    html { font-size: 16px !important; }
+    body {
       margin: 0;
       padding: 0;
       background: #f6f6f6;
       font-family: Marianne, Arial, sans-serif;
-      font-size: 15px;
-      line-height: 1.5;
+      font-size: 16px !important;
+      line-height: 1.6;
     }
 
     .widget-container {
       max-width: 720px;
       margin: 0 auto;
-      padding: 1.25rem 1rem 2rem;
+      padding: 1.5rem 1.5rem 2.5rem;
     }
 
     /* ── Breakpoints via ResizeObserver ── */
@@ -35,11 +36,11 @@
     /* medium  : 700–1000px → .w-medium  */
     /* large   : > 1000px → (défaut)   */
 
-    .w-narrow { font-size: 13px; }
+    .w-narrow { font-size: 14px; }
     .w-medium { font-size: 14px; }
 
-    .w-narrow .widget-container { padding: 0.6rem 0.6rem 1.5rem; }
-    .w-medium .widget-container { padding: 0.875rem 0.75rem 2rem; }
+    .w-narrow .widget-container { padding: 0.75rem 0.75rem 1.5rem; }
+    .w-medium .widget-container { padding: 1.1rem 1rem 2rem; }
 
     /* ── Header ── */
     .widget-header {
@@ -92,21 +93,21 @@
     .fr-label {
       display: block;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 16px;
     }
-    .w-narrow .fr-label { font-size: 0.82rem; }
+    .w-narrow .fr-label { font-size: 14px; }
 
     .fr-hint-text {
       display: block;
-      font-size: 0.8rem;
+      font-size: 14px;
       color: #666;
       margin-top: 0.15rem;
       margin-bottom: 0.2rem;
     }
-    .w-narrow .fr-hint-text { font-size: 0.72rem; }
+    .w-narrow .fr-hint-text { font-size: 13px; }
 
-    .fr-select-group { margin-bottom: 1rem; }
-    .w-narrow .fr-select-group { margin-bottom: 0.75rem; }
+    .fr-select-group { margin-bottom: 1.25rem; }
+    .w-narrow .fr-select-group { margin-bottom: 0.875rem; }
 
     .fr-select {
       width: 100%;
@@ -114,12 +115,12 @@
       border: 1px solid #929292;
       border-radius: 0.25rem;
       background: white;
-      font-size: 0.9rem;
+      font-size: 16px;
       font-family: inherit;
-      margin-top: 0.2rem;
+      margin-top: 0.3rem;
       appearance: auto;
     }
-    .w-narrow .fr-select { padding: 0.4rem 0.6rem; font-size: 0.82rem; }
+    .w-narrow .fr-select { padding: 0.45rem 0.65rem; font-size: 14px; }
     .fr-select:disabled { background: #e5e5e5; color: #929292; cursor: not-allowed; }
     .fr-select:focus { outline: 2px solid #0a76f6; outline-offset: 2px; }
 
@@ -133,13 +134,13 @@
       border: none;
       border-radius: 0.25rem;
       font-family: inherit;
-      font-size: 0.9rem;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       text-decoration: none;
       transition: background 0.15s, color 0.15s;
     }
-    .w-narrow .fr-btn { padding: 0.4rem 0.75rem; font-size: 0.82rem; }
+    .w-narrow .fr-btn { padding: 0.45rem 0.875rem; font-size: 14px; }
     .fr-btn:not(.fr-btn--secondary) { background: #000091; color: white; }
     .fr-btn:not(.fr-btn--secondary):hover { background: #1212ff; }
     .fr-btn--secondary { background: transparent; color: #000091; border: 1px solid currentColor; }
@@ -161,11 +162,11 @@
     .alert {
       padding: 0.75rem 1rem;
       border-radius: 0.25rem;
-      font-size: 0.9rem;
-      margin-bottom: 0.875rem;
-      line-height: 1.5;
+      font-size: 16px;
+      margin-bottom: 1rem;
+      line-height: 1.6;
     }
-    .w-narrow .alert { padding: 0.6rem 0.75rem; font-size: 0.8rem; }
+    .w-narrow .alert { padding: 0.65rem 0.875rem; font-size: 14px; }
     .alert--info    { background: #e8edff; color: #000091; border-left: 3px solid #000091; }
     .alert--error   { background: #ffe9e9; color: #ce0500; border-left: 3px solid #ce0500; }
     .alert--success { background: #dffee7; color: #18753c; border-left: 3px solid #18753c; }
@@ -395,9 +396,8 @@
     }
   }
 
-  // Appel initial + sur resize fenêtre
+  // Appel au chargement uniquement (iframe fixe dans Grist)
   applyBreakpoint();
-  window.addEventListener('resize', applyBreakpoint);
 })();
 
 // ──────────────────────────────────────────────
