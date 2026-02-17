@@ -378,15 +378,21 @@
 // ──────────────────────────────────────────────
 (function() {
   const body = document.body;
+  // Observer le widget-container, pas le body
+  const container = document.querySelector('.widget-container');
   const observer = new ResizeObserver(entries => {
     const width = entries[0].contentRect.width;
     body.classList.remove('w-narrow', 'w-medium');
     if (width < 380) body.classList.add('w-narrow');
     else if (width < 560) body.classList.add('w-medium');
-    console.log('[Moose] ResizeObserver width:', width, '→ classes:', body.className);
+    console.log('[Moose] ResizeObserver container width:', width, '→ classes:', body.className);
   });
-  observer.observe(body);
-  console.log('[Moose] ResizeObserver initialisé');
+  if (container) {
+    observer.observe(container);
+    console.log('[Moose] ResizeObserver initialisé sur .widget-container');
+  } else {
+    console.warn('[Moose] .widget-container introuvable');
+  }
 })();
 
 // ──────────────────────────────────────────────
