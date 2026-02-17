@@ -711,21 +711,30 @@ function extractDocIdFromUrl() {
 // grist.ready() → ensuite on charge les tables
 // On utilise onOptions pour détecter que Grist a bien chargé le widget
 grist.onOptions(async (opts, interaction) => {
-  // Récupérer le docId
-  docId = extractDocIdFromUrl();
+  await initWidget();
+});
 
-  if (!docId) {
-    // Fallback : essayer via getSelectedTableId qui contient parfois l'info
-    try {
-      const tid = await grist.getSelectedTableId();
-      // L'URL du parent contient le docId
-      if (window.parent !== window) {
-        // On est dans un iframe — tenter de le lire depuis referrer ou location
-        const ref = document.referrer;
-        const m = ref.match(/\/docs\/([^/]+)/);
-        if (m) docId = m[1];
-      }
-    } catch(e) {}
+// Fallback si onOptions ne se déclenche pas
+setTimeout(async () => {
+  if (!docId) await initWidget();
+}, 1500);
+
+async function initWidget() {
+  if (docId) return; // déjà initialisé
+
+  try {
+    // getAccessToken retourne baseUrl de la forme :
+    // https://grist.numerique.gouv.fr/api/docs/DOC_ID
+    const tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
+    const m = tokenInfo.baseUrl.match(/\/docs\/([^/]+)/);
+    if (m) {
+      docId = m[1];
+    } else {
+      throw new Error('docId introuvable dans baseUrl : ' + tokenInfo.baseUrl);
+    }
+  } catch(err) {
+    // Dernier fallback : URL courante
+    docId = extractDocIdFromUrl();
   }
 
   if (!docId) {
@@ -735,15 +744,7 @@ grist.onOptions(async (opts, interaction) => {
   }
 
   await loadTables();
-});
-
-// Fallback si onOptions ne se déclenche pas (accès "none" initial)
-setTimeout(async () => {
-  if (!docId) {
-    docId = extractDocIdFromUrl();
-    if (docId) await loadTables();
-  }
-}, 1500);
+}
 
 </script>
 
