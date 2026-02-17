@@ -503,17 +503,10 @@ async function loadColumns(tableName) {
   resultDiv.innerHTML = '';
 
   try {
-    // On utilise l'access token pour appeler l'API REST
-    const tokenInfo = await getToken(true);
-    // tokenInfo.baseUrl = https://grist.../api/docs/DOC_ID
-    const url = `${tokenInfo.baseUrl}/tables/${tableName}/columns`;
-    const resp = await fetch(url, {
-      headers: { Authorization: `Bearer ${tokenInfo.token}` }
-    });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-
-    const cols = (data.columns || []).map(c => c.id);
+    // grist.docApi.fetchTable : pas de CORS, passe par le bridge Grist
+    const tableData = await grist.docApi.fetchTable(tableName);
+    const EXCLUDED_COLS = new Set(['id', 'manualSort']);
+    const cols = Object.keys(tableData).filter(k => !EXCLUDED_COLS.has(k) && !k.startsWith('gristHelper_'));
     if (cols.length === 0) {
       columnSelect.innerHTML = '<option value="">-- Aucune colonne --</option>';
       return;
@@ -639,12 +632,24 @@ async function runTest() {
   });
 
   try {
-    const tokenInfo = await getToken(true);
-    const resp = await fetch(testUrl, {
-      headers: { Authorization: `Bearer ${tokenInfo.token}` }
-    });
-    const data = await resp.json();
-    const count = (data.records || []).length;
+    // fetchTable via bridge Grist (pas de CORS)
+    const table = tableSelect.value;
+    const column = columnSelect.value;
+    const tableData = await grist.docApi.fetchTable(table);
+    const ids = tableData.id || [];
+    const colData = tableData[column] || [];
+
+    const matchingRecords = ids.reduce((acc, rowId, i) => {
+      if (String(colData[i] ?? '') === val) {
+        const fields = {};
+        Object.keys(tableData).forEach(k => { fields[k] = tableData[k][i]; });
+        acc.push({ id: rowId, fields });
+      }
+      return acc;
+    }, []);
+
+    const count = matchingRecords.length;
+    const data = { records: matchingRecords };
 
     $('accordion-toggle').innerHTML = `🧪 Test avec <code>"${val}"</code> – ${count} enregistrement${count > 1 ? 's' : ''} trouvé${count > 1 ? 's' : ''}`;
     $('test-json').textContent = JSON.stringify(data, null, 2);
