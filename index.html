@@ -383,8 +383,10 @@
     body.classList.remove('w-narrow', 'w-medium');
     if (width < 380) body.classList.add('w-narrow');
     else if (width < 560) body.classList.add('w-medium');
+    console.log('[Moose] ResizeObserver width:', width, '→ classes:', body.className);
   });
   observer.observe(body);
+  console.log('[Moose] ResizeObserver initialisé');
 })();
 
 // ──────────────────────────────────────────────
