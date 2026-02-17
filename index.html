@@ -720,31 +720,50 @@ setTimeout(async () => {
 }, 1500);
 
 async function initWidget() {
-  if (docId) return; // déjà initialisé
+  if (docId) return;
 
   try {
     const tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
-    // Décoder le payload JWT pour extraire docId
-    const payload = JSON.parse(atob(tokenInfo.token.split('.')[1]));
-    docId = payload.docId;
-    if (!docId) throw new Error('docId absent du payload JWT');
-  } catch(err) {
-    console.warn('[Moose] JWT docId failed:', err);
-    // Fallback : extraire depuis baseUrl
+
+    // Affichage debug brut
+    let debugHtml = '<div style="background:#fff3cd;padding:1rem;font-family:monospace;font-size:0.75rem;word-break:break-all;margin-bottom:1rem;">';
+    debugHtml += '<b>DEBUG getAccessToken</b><br><br>';
+    debugHtml += `<b>baseUrl :</b> ${tokenInfo.baseUrl}<br><br>`;
+
+    let payload = {};
     try {
-      const tokenInfo = await grist.docApi.getAccessToken({ readOnly: true });
+      payload = JSON.parse(atob(tokenInfo.token.split('.')[1]));
+      debugHtml += `<b>JWT payload :</b><br>${JSON.stringify(payload, null, 2).replace(/\n/g,'<br>').replace(/ /g,'&nbsp;')}`;
+    } catch(e) {
+      debugHtml += `<b>JWT decode error :</b> ${e.message}`;
+    }
+    debugHtml += '</div>';
+    resultDiv.innerHTML = debugHtml;
+
+    // Tentatives extraction docId
+    docId = payload.docId || payload.doc || payload.d || null;
+    if (!docId) {
       const m = tokenInfo.baseUrl.match(/\/docs\/([^/]+)/);
       if (m) docId = m[1];
-    } catch(e) {}
-  }
+    }
+    if (!docId) {
+      const m2 = tokenInfo.baseUrl.match(/\/([a-zA-Z0-9]{20,})/);
+      if (m2) docId = m2[1];
+    }
 
-  if (!docId) {
-    setStatus('error', 'Impossible de détecter l\'ID du document');
-    tableSelect.innerHTML = '<option value="">-- DocId non trouvé --</option>';
-    return;
-  }
+    resultDiv.innerHTML += `<div style="background:#d4edda;padding:0.5rem;font-family:monospace;font-size:0.8rem;">docId extrait : <b>${docId || 'NON TROUVÉ'}</b></div>`;
 
-  await loadTables();
+    if (!docId) {
+      setStatus('error', 'Impossible de détecter l\'ID du document');
+      return;
+    }
+
+    await loadTables();
+
+  } catch(err) {
+    resultDiv.innerHTML = `<div style="background:#f8d7da;padding:1rem;font-family:monospace;font-size:0.75rem;">ERREUR : ${err.message}</div>`;
+    setStatus('error', `Erreur : ${err.message}`);
+  }
 }
 
 </script>
